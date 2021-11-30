@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<!-- 
+    (c) S. Bertrand, 2019 
+    Commande drone en simulation sous QLAB
+-->
+
+<launch>
+
+	<!-- RViz GUI -->
+   	<node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find projet_drone)/viz/drone.rviz" /> 
+
+	<!-- RQT GUI -->
+   	<node name="graphical_interface" pkg="rqt_gui" type="rqt_gui" output="screen" args="--perspective-file $(find projet_drone)/viz/msg_takeoff_land_cmdvel.perspective" />
+    <node name="position_plot" pkg="rqt_gui" type="rqt_gui" output="screen" args="--perspective-file $(find projet_drone)/viz/plot_position.perspective" />
+
+
+</launch>
+
+

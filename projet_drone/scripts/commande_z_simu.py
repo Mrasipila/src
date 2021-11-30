@@ -17,10 +17,13 @@ global x,y,z,psi,vx,vy
 x = 0.0
 y = 0.0
 z = 0.0
+
 psi_deg = 0.0
 vx = 0.0
 vy = 0.0
 
+k = 0.0
+corr = 0.0
 
 # Node init
 rospy.init_node('cmd', anonymous=True)
@@ -38,13 +41,15 @@ commandRate = rospy.Rate(10)
 
 # Measurements reading
 def readXYZ(data):
-    global x, y, z
+    global x, y, z, k
     # Data reading X axis
     x = data.pose.pose.position.x 
     # Data reading Y axis
     y = data.pose.pose.position.y    
     # Data reading Z axis
     z = data.pose.pose.position.z    
+    
+    corr = k*(z_ref - z)
     
     
     
@@ -57,7 +62,7 @@ def readPsiVxVy(data):
     psi_deg = data.rotZ
     vx = data.vx
     vy = data.vy
-    
+
 
 # Subscriber declaration 
 rospy.Subscriber("/ground_truth/state", Odometry, readXYZ)
@@ -75,7 +80,7 @@ if __name__ == '__main__':
 
         command.linear.x = 0.0
         command.linear.y = 0.0
-        command.linear.z = 0.0     #  <-----  TO BE MODIFIED
+        command.linear.z = corr   #  <-----  TO BE MODIFIED
 
         command.angular.x = 0.0
         command.angular.y = 0.0

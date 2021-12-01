@@ -5,6 +5,7 @@ import numpy as np
 from geometry_msgs.msg import Twist
 from ardrone_autonomy.msg import Navdata # for receiving navdata feedback
 from nav_msgs.msg import Odometry # for receiving odometry feedback
+from std_msgs.msg import Float32
 
 # Global variables 
 global z_ref
@@ -61,12 +62,19 @@ def readPsiVxVy(data):
     psi_deg = data.rotZ
     vx = data.vx
     vy = data.vy
-    z = data.altd / 1000.0
+    #z = data.altd / 1000.0
+  
+
+def callback(data):
+    global z_ref
+    rospy.loginfo(rospy.get_caller_id() + "new message -> zref set to : %s", str(data.data))
+    z_ref = rospy.get_param("~zref",data.data)
 
 
 # Subscriber declaration 
 rospy.Subscriber("/ground_truth/state", Odometry, readXYZ)
 rospy.Subscriber("/ardrone/navdata", Navdata, readPsiVxVy)
+rospy.Subscriber("chatter", Float32, callback)
 
 
 # Main: looping execution

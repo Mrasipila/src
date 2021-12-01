@@ -5,6 +5,7 @@ import numpy as np
 from geometry_msgs.msg import Twist
 from ardrone_autonomy.msg import Navdata # for receiving navdata feedback
 from nav_msgs.msg import Odometry # for receiving odometry feedback
+from std_msgs.msg import Empty
 
 # Global variables 
 global z_ref
@@ -31,13 +32,14 @@ rospy.init_node('cmd', anonymous=True)
 
 # reference
 # can also be coded as global variable, input topic, value read from textfile, etc.
-z_ref = rospy.get_param("~zref",3.5) # m
+z_ref =  [1.0, 1.5, 2.0, 2.5, 3.0] 
 
 
 # Publisher declaration on the topic of command
 pubCommand = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 commandRate = rospy.Rate(10) 
 
+publand = rospy.Publisher('/ardrone/land', Empty, queue_size=10)
 
 
 # Measurements reading
@@ -61,24 +63,39 @@ def readPsiVxVy(data):
     psi_deg = data.rotZ
     vx = data.vx
     vy = data.vy
-    z = data.altd / 1000.0
+    #z = data.altd / 1000.0
 
 
 # Subscriber declaration 
 rospy.Subscriber("/ground_truth/state", Odometry, readXYZ)
 rospy.Subscriber("/ardrone/navdata", Navdata, readPsiVxVy)
 
+i = 0
+corr = 0.0
+timer = None
+
+def next_point(event):
+    global corr, i, k, timer
+    rospy.loginfo(" Timer :" + str(event.current_real))
+    rospy.loginfo(" i : " + str(i))
+    if corr/k <= 0.1 and corr/k >= -0.1 and i < len(z_ref)-1:
+	i+=1
+    if i is len(z_ref)-1:
+	publand.publish()
+	timer.shutdown()
+
 
 # Main: looping execution
 if __name__ == '__main__':
-    global x, y, z, vx, vy, psi_deg, x_ref, y_ref, z_ref
+    global x, y, z, vx, vy, psi_deg, x_ref, y_ref, z_ref, corr, i, timer
 
-
-
+    timer = rospy.Timer(rospy.Duration(5), next_point)
     while not rospy.is_shutdown():
-        rospy.loginfo(" zref=%f m,  z=%f m", z_ref, z)
+        rospy.loginfo(" zref=%f m,  z=%f m", z_ref[i], z)
+
+	corr = k*(z_ref[i]  - z)
 	
-	corr = k*(z_ref - z)
+	
 	
         command.linear.x = 0.0
         command.linear.y = 0.0

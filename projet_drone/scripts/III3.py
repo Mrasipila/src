@@ -2,6 +2,7 @@
 
 import rospy
 import numpy as np
+import math
 from geometry_msgs.msg import Twist
 from ardrone_autonomy.msg import Navdata # for receiving navdata feedback
 from nav_msgs.msg import Odometry # for receiving odometry feedback
@@ -35,7 +36,7 @@ rospy.init_node('cmd', anonymous=True)
 x_ref = 3.5
 y_ref = 3.5
 z_ref = 3.5
-
+psi_ref = np.pi
 
 # Publisher declaration on the topic of command
 pubCommand = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -52,8 +53,6 @@ def readXYZ(data):
     y = data.pose.pose.position.y    
     # Data reading Z axis
     z = data.pose.pose.position.z   
-    # Data reading Psy 
-    psi = data.pose.pose.orientation.z
 
 
 
@@ -75,16 +74,14 @@ rospy.Subscriber("/ardrone/navdata", Navdata, readPsiVxVy)
 
 # Main: looping execution
 if __name__ == '__main__':
-    global x, y, z, vx, vy, psi_deg, x_ref, y_ref, z_ref, k, psi
+    global x, y, z, vx, vy, psi_deg, x_ref, y_ref, z_ref, k
     
-    #timer = rospy.Timer(rospy.Duration(5), next_point)
-    i = 0
-    cpt = 0
-    flag = 0
+    psi_rad = 0.0
     while not rospy.is_shutdown():
         rospy.loginfo(" zref=%f m,  z=%f m", z_ref, z)
         rospy.loginfo(" yref=%f m,  y=%f m", y_ref, y)
         rospy.loginfo(" xref=%f m,  x=%f m", x_ref, x)
+        rospy.loginfo(" psi-ref=%f m,  psi=%f m", psi_ref, psi_rad)
         
         psi_rad = psi_deg * (np.pi/180)
         
@@ -94,6 +91,11 @@ if __name__ == '__main__':
 	corr_y = -vx*np.sin(psi_rad)+np.cos(psi_rad)*vy
 	corr_z = k*(z_ref  - z)
 	
+	
+	if (math.fabs(psi_ref-psi_rad)>math.pi):
+	    psi_rad = psi_rad + math.copysign(2*math.pi,psi_ref)
+	    
+	corr_lacet = k*(psi_ref-psi_rad)
 	"""
 	if flag == 1 :
 	    rospy.loginfo(" landing ")
@@ -101,11 +103,11 @@ if __name__ == '__main__':
 	  """
         command.linear.x = corr_x
         command.linear.y = corr_y
-        command.linear.z = corr_z   #  <-----  TO BE MODIFIED
+        command.linear.z = corr_z  
 
         command.angular.x = 0.0
         command.angular.y = 0.0
-        command.angular.z = 0.0
+        command.angular.z = corr_lacet
 
         # Command sending
 	pubCommand.publish(command)

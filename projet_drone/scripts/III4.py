@@ -33,10 +33,10 @@ rospy.init_node('cmd', anonymous=True)
 
 # reference
 # can also be coded as global variable, input topic, value read from textfile, etc.
-x_ref = [3.5, 4.0, 6.0, 7.0]
-y_ref = [3.5, 4.0, 6.0, 7.0]
-z_ref = [3.5, 4.0, 6.0, 7.0]
-psi_ref = [np.pi, np.pi, np.pi, np.pi]
+x_ref = [1.5, 1.5, 0.5, 0.5, 6.0, 6.0, 6.0, 0.0,0.0]
+y_ref = [0, 7.8, 7.8, 7.8, 7.8, 7.8, 7.8, 0.0, 0.0]
+z_ref = [1.0, 1.0, 2.5, 0.5, 2.5, 0.5, 0.5, 0.5, 0.0]
+psi_ref = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi/2]
 
 # Publisher declaration on the topic of command
 pubCommand = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -98,7 +98,7 @@ def next_point(event):
 if __name__ == '__main__':
     global x, y, z, vx, vy, psi_deg, x_ref, y_ref, z_ref, k, timer, i, corr_x, corr_y, corr_z, corr_lacet
     
-    timer = rospy.Timer(rospy.Duration(5), next_point)
+    timer = rospy.Timer(rospy.Duration(2.5), next_point)
     
     psi_rad = 0.0
     while not rospy.is_shutdown():
